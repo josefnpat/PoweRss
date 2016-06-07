@@ -3,6 +3,7 @@ require('config.php');
 
 $feeds = 'SELECT * FROM feeds';
 $data = array();
+// TODO: add timeout
 foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
   if($row['lastupdate'] + UPDATE_INTERVAL < time()){
 
@@ -50,4 +51,4 @@ foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
 
   }
 }
-
+echo "Done [completed @ ".date('r',time())."]";
