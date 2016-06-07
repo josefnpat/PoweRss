@@ -1,0 +1,9 @@
+<?php
+$db_host = 'localhost';
+$db_name = 'powerss';
+$db_username = "powerss";
+$db_pass = 'astrongpassword';
+
+$db = new PDO('mysql:host=localhost;dbname='.$db_name, $db_username, $db_pass);
+
+DEFINE('UPDATE_INTERVAL',60);//seconds
