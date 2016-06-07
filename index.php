@@ -1,4 +1,18 @@
-<!doctype html>
+<?php
+
+require('config.php');
+$hide = (int) $_GET['hide'];
+if( $hide > 0){
+  $hidesql = 'UPDATE items SET hidden=1 WHERE id=:id';
+  $hideq = $db->prepare($hidesql);
+  $hideq->execute(
+    array(
+      ':id' => $hide,
+    )
+  );
+}
+
+?><!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -15,9 +29,27 @@
     </div>
     <div id="content" class="mui-container-fluid">
 
+<?php
+
+$itemcounts = "SELECT count(*) FROM items WHERE hidden = 0";
+$itemcountq = $db->prepare($itemcounts);
+$itemcountq->execute();
+$itemcount = $itemcountq->fetchColumn(0);
+
+$hiddenitemcounts = "SELECT count(*) FROM items";
+$hiddenitemcountq = $db->prepare($hiddenitemcounts);
+$hiddenitemcountq->execute();
+$hiddenitemcount = $hiddenitemcountq->fetchColumn(0);
+
+
+?>
+
+<p>Items: <?php echo $itemcount; ?>/<?php echo $hiddenitemcount; ?></p>
+
 <table class="mui-table mui-table--bordered">
   <thead>
     <tr>
+      <th></th>
       <th>Item</th>
       <th>Site</th>
       <th>Time</th>
@@ -26,21 +58,23 @@
     <tbody>
 <?php
 
-require('config.php');
-
 $page = (int)$_GET['page'];
 $offset = $page*ITEMS_PER_PAGE;
 
-$sql = 'SELECT id,data,lastupdate FROM items ORDER BY lastupdate DESC LIMIT '.ITEMS_PER_PAGE.' OFFSET '.$offset;
+$sql = 'SELECT id,data,lastupdate FROM items WHERE hidden = 0 ORDER BY lastupdate DESC LIMIT '.ITEMS_PER_PAGE.' OFFSET '.$offset;
 foreach($db->query($sql,PDO::FETCH_ASSOC) as $row){
   $data = json_decode($row['data']);
   // TODO: Assumes RSS/RDF spec
   $linkparts = parse_url($data->link);
+  $title = is_string($data->title) ? $data->title : "[Error Loading Title]";
 ?>
           <tr>
             <td>
+              <a href="?hide=<?php echo $row['id']; ?>" class="mui-btn mui-btn--small mui-btn--primary">hide</a>
+            </td>
+            <td>
               <a href="<?php echo $data->link; ?>" target="_blank">
-                <?php echo $data->title; ?> 
+                <?php echo $title; ?>
               </a>
             </td>
             <td>
@@ -57,10 +91,6 @@ foreach($db->query($sql,PDO::FETCH_ASSOC) as $row){
         </tbody>
       </table>
 <?php
-$itemcount = "SELECT count(*) FROM items";
-$itemcountq = $db->prepare($itemcount);
-$itemcountq->execute();
-$itemcount = $itemcountq->fetchColumn(0);
 
 $pagstart = (int) max($page-PAG_PER_PAGE/2,1);
 $pagend = (int) min($pagstart + PAG_PER_PAGE,ceil($itemcount/ITEMS_PER_PAGE));
