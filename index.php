@@ -28,7 +28,10 @@
 
 require('config.php');
 
-$sql = 'SELECT id,data,lastupdate FROM items ORDER BY lastupdate DESC LIMIT 10';
+$page = (int)$_GET['page'];
+$offset = $page*ITEMS_PER_PAGE;
+
+$sql = 'SELECT id,data,lastupdate FROM items ORDER BY lastupdate DESC LIMIT '.ITEMS_PER_PAGE.' OFFSET '.$offset;
 foreach($db->query($sql,PDO::FETCH_ASSOC) as $row){
   $data = json_decode($row['data']);
   // TODO: Assumes RSS/RDF spec
@@ -50,10 +53,33 @@ foreach($db->query($sql,PDO::FETCH_ASSOC) as $row){
 
 <?php
 }
-
 ?>
         </tbody>
       </table>
+<?php
+$itemcount = "SELECT count(*) FROM items";
+$itemcountq = $db->prepare($itemcount);
+$itemcountq->execute();
+$itemcount = $itemcountq->fetchColumn(0);
+
+$pagstart = (int) max($page-PAG_PER_PAGE/2,1);
+$pagend = (int) min($pagstart + PAG_PER_PAGE,ceil($itemcount/ITEMS_PER_PAGE));
+
+?>
+<a href="?" class="mui-btn mui-btn--small mui-btn--primary">&lt;&lt;</a>
+<?php
+for($i=$pagstart;$i<$pagend;$i++){
+  $accent = "";
+  if($i == $page){
+    $accent = "mui-btn--accent";
+  }
+?>
+  <a href="?page=<?php echo $i; ?>" class="mui-btn mui-btn--small mui-btn--primary <?php echo $accent; ?>">
+    <?php echo $i; ?>
+  </a>
+<?php
+}
+?>
 
     </div>
   </body>

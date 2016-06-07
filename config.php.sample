@@ -7,3 +7,5 @@ $db_pass = 'astrongpassword';
 $db = new PDO('mysql:host=localhost;dbname='.$db_name, $db_username, $db_pass);
 
 DEFINE('UPDATE_INTERVAL',60);//seconds
+DEFINE('ITEMS_PER_PAGE',20);
+DEFINE('PAG_PER_PAGE',10);
