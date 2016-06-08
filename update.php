@@ -1,7 +1,7 @@
 <?php
 require('config.php');
 
-$feeds = 'SELECT url,lastupdate FROM feeds';
+$feeds = 'SELECT id,url,lastupdate FROM feeds';
 $data = array();
 // TODO: add timeout
 $feeds_updated = 0;
@@ -29,7 +29,7 @@ foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
 
         if($checkr[0][0] == 0){
           $items_added++;
-          $insert = $db->prepare('INSERT INTO items (`lastupdate`,`hash`,`data`) VALUES (:lastupdate,:hash,:data)');
+          $insert = $db->prepare('INSERT INTO items (`feedid`,`lastupdate`,`hash`,`data`) VALUES (:feedid,:lastupdate,:hash,:data)');
           // TODO: Assumes unix time stamp is returned from strtotime
           $t = strtotime($item->pubDate);
           if($t === false){ // fallback for folks who don't have pubDate, we just shove now in.
@@ -37,6 +37,7 @@ foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
           }
           $insert->execute(
             array(
+              ':feedid' => $row['id'],
               ':lastupdate' => $t,
               ':hash' => $hash,
               ':data' => $json_item,

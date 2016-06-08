@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 07, 2016 at 10:38 AM
+-- Generation Time: Jun 08, 2016 at 01:41 PM
 -- Server version: 5.7.12-0ubuntu1
 -- PHP Version: 7.0.4-7ubuntu2.1
 
@@ -40,6 +40,7 @@ CREATE TABLE `feeds` (
 
 CREATE TABLE `items` (
   `id` int(11) NOT NULL,
+  `feedid` int(11) NOT NULL,
   `lastupdate` int(10) NOT NULL,
   `hidden` bit(1) NOT NULL DEFAULT b'0',
   `hash` varchar(32) NOT NULL,
@@ -54,12 +55,14 @@ CREATE TABLE `items` (
 -- Indexes for table `feeds`
 --
 ALTER TABLE `feeds`
+  ADD UNIQUE KEY `id_2` (`id`),
   ADD KEY `id` (`id`);
 
 --
 -- Indexes for table `items`
 --
 ALTER TABLE `items`
+  ADD UNIQUE KEY `id_2` (`id`),
   ADD KEY `id` (`id`),
   ADD KEY `hash` (`hash`);
 

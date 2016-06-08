@@ -2,6 +2,8 @@
 
 require('config.php');
 
+$feedid = (int)@$_GET['feedid'];
+
 $hide = (int)@$_GET['hide'];
 if( $hide > 0){
   $hidesql = 'UPDATE items SET hidden=1 WHERE id=:id';
@@ -9,6 +11,21 @@ if( $hide > 0){
   $hideq->execute(
     array(
       ':id' => $hide,
+    )
+  );
+}
+
+$hideall = isset($_GET['hideall']);
+if($hideall){
+  $hidesql = 'UPDATE items SET hidden=1 WHERE 1';
+  if($feedid > 0){
+    $hidesql .= " AND feedid = $feedid";
+  }
+  $hideq = $db->prepare($hidesql);
+  $hideq->execute(
+    array(
+      ':id' => $hide,
+      ':feedid' => $feedid,
     )
   );
 }
@@ -27,17 +44,26 @@ if( $hide > 0){
   <body>
     <div id="sidebar">
       <div class="mui--text-white mui--text-display1 mui--align-vertical">PoweRss</div>
+      <ul>
+        <a href="?">All</a>
+      </ul>
     </div>
     <div id="content" class="mui-container-fluid">
 
 <?php
 
 $itemcounts = "SELECT count(*) FROM items WHERE hidden = 0";
+if($feedid > 0){
+  $itemcounts .= " AND feedid = $feedid";
+}
 $itemcountq = $db->prepare($itemcounts);
 $itemcountq->execute();
 $itemcount = $itemcountq->fetchColumn(0);
 
-$hiddenitemcounts = "SELECT count(*) FROM items";
+$hiddenitemcounts = "SELECT count(*) FROM items WHERE 1";
+if($feedid > 0){
+  $hiddenitemcounts .= " AND feedid = $feedid";
+}
 $hiddenitemcountq = $db->prepare($hiddenitemcounts);
 $hiddenitemcountq->execute();
 $hiddenitemcount = $hiddenitemcountq->fetchColumn(0);
@@ -46,6 +72,8 @@ $hiddenitemcount = $hiddenitemcountq->fetchColumn(0);
 
       <h1>Items</h1>
       <p><?php echo $itemcount; ?>/<?php echo $hiddenitemcount; ?></p>
+
+      <a href="?hideall&feedid=<?php echo $feedid; ?>" class="mui-btn mui-btn--small mui-btn--primary">Hide All</a>
 
       <table class="mui-table mui-table--bordered">
         <thead>
@@ -62,8 +90,13 @@ $hiddenitemcount = $hiddenitemcountq->fetchColumn(0);
 $page = (int)@$_GET['page'];
 $offset = $page*ITEMS_PER_PAGE;
 
-$sql = 'SELECT id,data,lastupdate FROM items WHERE hidden = 0 ORDER BY lastupdate DESC LIMIT '.ITEMS_PER_PAGE.' OFFSET '.$offset;
-foreach($db->query($sql,PDO::FETCH_ASSOC) as $row){
+if($feedid > 0){
+  $feeditems = " AND feedid = $feedid";
+} else {
+  $feeditems = "";
+}
+$items = "SELECT id,data,lastupdate FROM items WHERE hidden = 0 $feeditems ORDER BY lastupdate DESC LIMIT ".ITEMS_PER_PAGE.' OFFSET '.$offset;
+foreach($db->query($items,PDO::FETCH_ASSOC) as $row){
   $data = json_decode($row['data']);
   // TODO: Assumes RSS/RDF spec
   $linkparts = parse_url($data->link);
@@ -71,7 +104,7 @@ foreach($db->query($sql,PDO::FETCH_ASSOC) as $row){
 ?>
             <tr>
               <td>
-                <a href="?hide=<?php echo $row['id']; ?>" class="mui-btn mui-btn--small mui-btn--primary">hide</a>
+                <a href="?feedid=<?php echo $feedid;?>&hide=<?php echo $row['id']; ?>" class="mui-btn mui-btn--small mui-btn--primary">hide</a>
               </td>
               <td>
                 <a href="<?php echo $data->link; ?>" target="_blank">
@@ -96,7 +129,7 @@ $pagstart = (int) max($page-PAG_PER_PAGE/2,1);
 $pagend = (int) min($pagstart + PAG_PER_PAGE,ceil($itemcount/ITEMS_PER_PAGE));
 
 ?>
-      <a href="?" class="mui-btn mui-btn--small mui-btn--primary">&lt;&lt;</a>
+      <a href="?feedid=<?php echo $feedid; ?>" class="mui-btn mui-btn--small mui-btn--primary">&lt;&lt;</a>
 <?php
 for($i=$pagstart;$i<$pagend;$i++){
   $accent = "";
@@ -110,11 +143,11 @@ for($i=$pagstart;$i<$pagend;$i++){
 <?php
 }
 ?>
-      <h1>Feeds</h1>
+      <h1>Unread Feeds</h1>
       <table class="mui-table mui-table--bordered">
         <thead>
           <tr>
-            <th></th>
+            <th>Items</th>
             <th>URL</th>
             <th>Last Update</th>
           </tr>
@@ -122,12 +155,17 @@ for($i=$pagstart;$i<$pagend;$i++){
         <tbody>
 <?php
 
-$feeds = 'SELECT id,url,lastupdate FROM feeds';
+$feeds = '
+SELECT feeds.id,feeds.url,feeds.lastupdate,COUNT(*) as itemcount
+FROM items
+LEFT JOIN feeds on feeds.id = items.feedid
+WHERE items.hidden = 0
+GROUP BY feeds.id,feeds.url,feeds.lastupdate ORDER BY itemcount DESC';
 foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
 ?>
         <tr>
-          <td></td>
-          <td><a href="<?php echo $row['url']; ?>"><?php echo $row['url']; ?></td>
+          <td><?php echo $row['itemcount']; ?></td>
+          <td><a href="?feedid=<?php echo $row['id']; ?>"><?php echo $row['url']; ?></td>
           <td><?php echo date('r',$row['lastupdate']); ?></td>
         </tr>
 <?php
