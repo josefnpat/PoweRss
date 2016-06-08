@@ -4,8 +4,11 @@ require('config.php');
 $feeds = 'SELECT * FROM feeds';
 $data = array();
 // TODO: add timeout
+$feeds_updated = 0;
+$items_added = 0;
 foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
   if($row['lastupdate'] + UPDATE_INTERVAL < time()){
+    $feeds_updated++;
 
     // TODO: Asssumes input is a url
     // TODO: Assumes return is xml
@@ -25,14 +28,13 @@ foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
         $checkr = $checkq->fetchAll();
 
         if($checkr[0][0] == 0){
+          $items_added++;
           $insert = $db->prepare('INSERT INTO items (`lastupdate`,`hash`,`data`) VALUES (:lastupdate,:hash,:data)');
-
           // TODO: Assumes unix time stamp is returned from strtotime
           $t = strtotime($item->pubDate);
           if($t === false){ // fallback for folks who don't have pubDate, we just shove now in.
             $t = time();
           }
-
           $insert->execute(
             array(
               ':lastupdate' => $t,
@@ -51,4 +53,4 @@ foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
 
   }
 }
-echo "Done [completed @ ".date('r',time())."]";
+echo "Updated $feeds_updated with $items_added new items [completed @ ".date('r',time())."]\n";
