@@ -1,7 +1,8 @@
 <?php
 
 require('config.php');
-$hide = (int) $_GET['hide'];
+
+$hide = (int)@$_GET['hide'];
 if( $hide > 0){
   $hidesql = 'UPDATE items SET hidden=1 WHERE id=:id';
   $hideq = $db->prepare($hidesql);
@@ -41,24 +42,23 @@ $hiddenitemcountq = $db->prepare($hiddenitemcounts);
 $hiddenitemcountq->execute();
 $hiddenitemcount = $hiddenitemcountq->fetchColumn(0);
 
-
 ?>
 
-<p>Items: <?php echo $itemcount; ?>/<?php echo $hiddenitemcount; ?></p>
+    <p>Items: <?php echo $itemcount; ?>/<?php echo $hiddenitemcount; ?></p>
 
-<table class="mui-table mui-table--bordered">
-  <thead>
-    <tr>
-      <th></th>
-      <th>Item</th>
-      <th>Site</th>
-      <th>Time</th>
-    </tr>
-    </thead>
-    <tbody>
+    <table class="mui-table mui-table--bordered">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Item</th>
+          <th>Site</th>
+          <th>Time</th>
+        </tr>
+        </thead>
+        <tbody>
 <?php
 
-$page = (int)$_GET['page'];
+$page = (int)@$_GET['page'];
 $offset = $page*ITEMS_PER_PAGE;
 
 $sql = 'SELECT id,data,lastupdate FROM items WHERE hidden = 0 ORDER BY lastupdate DESC LIMIT '.ITEMS_PER_PAGE.' OFFSET '.$offset;
@@ -88,15 +88,15 @@ foreach($db->query($sql,PDO::FETCH_ASSOC) as $row){
 <?php
 }
 ?>
-        </tbody>
-      </table>
+      </tbody>
+    </table>
 <?php
 
 $pagstart = (int) max($page-PAG_PER_PAGE/2,1);
 $pagend = (int) min($pagstart + PAG_PER_PAGE,ceil($itemcount/ITEMS_PER_PAGE));
 
 ?>
-<a href="?" class="mui-btn mui-btn--small mui-btn--primary">&lt;&lt;</a>
+    <a href="?" class="mui-btn mui-btn--small mui-btn--primary">&lt;&lt;</a>
 <?php
 for($i=$pagstart;$i<$pagend;$i++){
   $accent = "";
