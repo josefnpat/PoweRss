@@ -44,18 +44,19 @@ $hiddenitemcount = $hiddenitemcountq->fetchColumn(0);
 
 ?>
 
-    <p>Items: <?php echo $itemcount; ?>/<?php echo $hiddenitemcount; ?></p>
+      <h1>Items</h1>
+      <p><?php echo $itemcount; ?>/<?php echo $hiddenitemcount; ?></p>
 
-    <table class="mui-table mui-table--bordered">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Item</th>
-          <th>Site</th>
-          <th>Time</th>
-        </tr>
-        </thead>
-        <tbody>
+      <table class="mui-table mui-table--bordered">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Item</th>
+            <th>Site</th>
+            <th>Time</th>
+          </tr>
+          </thead>
+          <tbody>
 <?php
 
 $page = (int)@$_GET['page'];
@@ -68,35 +69,34 @@ foreach($db->query($sql,PDO::FETCH_ASSOC) as $row){
   $linkparts = parse_url($data->link);
   $title = is_string($data->title) ? $data->title : "[Error Loading Title]";
 ?>
-          <tr>
-            <td>
-              <a href="?hide=<?php echo $row['id']; ?>" class="mui-btn mui-btn--small mui-btn--primary">hide</a>
-            </td>
-            <td>
-              <a href="<?php echo $data->link; ?>" target="_blank">
-                <?php echo $title; ?>
-              </a>
-            </td>
-            <td>
-              <small>[<?php echo $linkparts['host']; ?>]</small>
-            </td>
-            <td>
-              <?php echo date('r',$row['lastupdate']); ?>
-            </td>
-          </tr>
-
+            <tr>
+              <td>
+                <a href="?hide=<?php echo $row['id']; ?>" class="mui-btn mui-btn--small mui-btn--primary">hide</a>
+              </td>
+              <td>
+                <a href="<?php echo $data->link; ?>" target="_blank">
+                  <?php echo $title; ?>
+                </a>
+              </td>
+              <td>
+                <small>[<?php echo $linkparts['host']; ?>]</small>
+              </td>
+              <td>
+                <?php echo date('r',$row['lastupdate']); ?>
+              </td>
+            </tr>
 <?php
 }
 ?>
-      </tbody>
-    </table>
+        </tbody>
+      </table>
 <?php
 
 $pagstart = (int) max($page-PAG_PER_PAGE/2,1);
 $pagend = (int) min($pagstart + PAG_PER_PAGE,ceil($itemcount/ITEMS_PER_PAGE));
 
 ?>
-    <a href="?" class="mui-btn mui-btn--small mui-btn--primary">&lt;&lt;</a>
+      <a href="?" class="mui-btn mui-btn--small mui-btn--primary">&lt;&lt;</a>
 <?php
 for($i=$pagstart;$i<$pagend;$i++){
   $accent = "";
@@ -104,13 +104,37 @@ for($i=$pagstart;$i<$pagend;$i++){
     $accent = "mui-btn--accent";
   }
 ?>
-  <a href="?page=<?php echo $i; ?>" class="mui-btn mui-btn--small mui-btn--primary <?php echo $accent; ?>">
-    <?php echo $i; ?>
-  </a>
+      <a href="?page=<?php echo $i; ?>" class="mui-btn mui-btn--small mui-btn--primary <?php echo $accent; ?>">
+        <?php echo $i; ?>
+      </a>
 <?php
 }
 ?>
+      <h1>Feeds</h1>
+      <table class="mui-table mui-table--bordered">
+        <thead>
+          <tr>
+            <th></th>
+            <th>URL</th>
+            <th>Last Update</th>
+          </tr>
+        </thead>
+        <tbody>
+<?php
 
+$feeds = 'SELECT id,url,lastupdate FROM feeds';
+foreach($db->query($feeds,PDO::FETCH_ASSOC) as $row){
+?>
+        <tr>
+          <td></td>
+          <td><a href="<?php echo $row['url']; ?>"><?php echo $row['url']; ?></td>
+          <td><?php echo date('r',$row['lastupdate']); ?></td>
+        </tr>
+<?php
+}
+?>
+        </tbody>
+      </table>
     </div>
   </body>
 </html>

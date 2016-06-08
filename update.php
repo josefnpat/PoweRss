@@ -1,7 +1,7 @@
 <?php
 require('config.php');
 
-$feeds = 'SELECT * FROM feeds';
+$feeds = 'SELECT url,lastupdate FROM feeds';
 $data = array();
 // TODO: add timeout
 $feeds_updated = 0;
